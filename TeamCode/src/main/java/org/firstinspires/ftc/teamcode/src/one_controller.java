@@ -5,38 +5,65 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-@TeleOp
+@TeleOp(name = "golf24")
 public class one_controller extends LinearOpMode {
 
-    DcMotorSimple FL = hardwareMap.dcMotor.get("FL");
-    DcMotorSimple FR = hardwareMap.dcMotor.get("FR");
-    DcMotorSimple BL = hardwareMap.dcMotor.get("BL");
-    DcMotorSimple BR = hardwareMap.dcMotor.get("BR");
-    DcMotorSimple club = hardwareMap.dcMotor.get("club");
+    private DcMotor Front_right;
+    private DcMotor Front_left;
+    private DcMotor Back_left;
+    private DcMotor Back_right;
+    private DcMotor club;
 
     @Override
     public void runOpMode() throws InterruptedException {
+
+        double Speed = 0.5;
+
+        Front_right = hardwareMap.get(DcMotor.class, "FR");
+        Front_left = hardwareMap.get(DcMotor.class, "FL");
+        Back_left = hardwareMap.get(DcMotor.class, "BL");
+        Back_right = hardwareMap.get(DcMotor.class, "BR");
+        club = hardwareMap.get(DcMotor.class, "club");
+
+        Front_right.setDirection(DcMotorSimple.Direction.REVERSE);
+        Front_left.setDirection(DcMotorSimple.Direction.FORWARD);
+        Back_left.setDirection(DcMotorSimple.Direction.FORWARD);
+        Back_right.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        Front_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        Front_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        Back_left.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        Back_right.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        club.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         waitForStart();
 
         while (opModeIsActive() && !isStopRequested()) {
 
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x * 1.1;
-            double rx = gamepad1.right_stick_x;
+            Back_left.setPower(Speed * (-gamepad1.right_stick_x + (+gamepad1.left_stick_y - -gamepad1.left_stick_x)));
+            Back_right.setPower(Speed * (gamepad1.right_stick_x + +gamepad1.left_stick_y + -gamepad1.left_stick_x));
+            Front_right.setPower(Speed * 1 * (gamepad1.right_stick_x + (+gamepad1.left_stick_y - -gamepad1.left_stick_x)));
+            Front_left.setPower(Speed * 1 * (-gamepad1.right_stick_x + +gamepad1.left_stick_y + -gamepad1.left_stick_x));
 
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x + rx) / denominator;
-            double backLeftPower = (y - x + rx) / denominator;
-            double frontRightPower = (y - x - rx) / denominator;
-            double backRightPower = (y + x - rx) / denominator;
+            if (gamepad1.b) {
+                Speed = 0.6;
+            }
 
-            FL.setPower(frontLeftPower);
-            FR.setPower(-backLeftPower);
-            BL.setPower(frontRightPower);
-            BR.setPower(-backRightPower);
+            if (gamepad1.y) {
+                Speed = 1;
+            }
 
+            if (gamepad1.a) {
+                Speed = 0.3;
+            }
 
+            if (gamepad1.right_trigger > gamepad1.left_trigger){
+                club.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
+            } else if (gamepad1.left_trigger > gamepad1.right_trigger) {
+                club.setPower(-(gamepad1.left_trigger - gamepad1.right_trigger));
+            } else if (gamepad1.left_trigger < 0.05 && gamepad1.right_trigger < 0.05) {
+                club.setPower(0);
+            }
         }
     }
 }
